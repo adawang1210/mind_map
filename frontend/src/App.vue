@@ -1,18 +1,12 @@
 <template>
   <div id="app">
-    <MindMap />
+    <router-view />
   </div>
 </template>
 
 <script>
-// import PdfUploader from './components/PdfUploader.vue';
-import MindMap from './components/MindMap.vue';
-
 export default {
-  name: 'App',
-  components: {
-    MindMap
-  }
+  name: "App",
 };
 </script>
 

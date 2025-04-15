@@ -2,7 +2,7 @@
   <div class="container">
     <h1>上傳 PDF 檔案</h1>
     <form @submit.prevent="uploadFile">
-      <input type="file" id="pdfFile" accept=".pdf" ref="fileInput" required>
+      <input type="file" id="pdfFile" accept=".pdf" ref="fileInput" required />
       <button type="submit">上傳</button>
     </form>
     <div id="result" v-html="resultMessage"></div>
@@ -11,10 +11,10 @@
 
 <script>
 export default {
-  name: 'PdfUploader',
+  name: "PdfUploader",
   data() {
     return {
-      resultMessage: ''
+      resultMessage: "",
     };
   },
   methods: {
@@ -26,12 +26,12 @@ export default {
       }
 
       const formData = new FormData();
-      formData.append('file', fileInput.files[0]);
+      formData.append("file", fileInput.files[0]);
 
       try {
-        const response = await fetch('http://localhost:3000/upload', {
-          method: 'POST',
-          body: formData
+        const response = await fetch("http://localhost:3000/upload", {
+          method: "POST",
+          body: formData,
         });
         const data = await response.json();
 
@@ -46,8 +46,8 @@ export default {
       } catch (error) {
         this.resultMessage = `<p class="error">上傳失敗: ${error.message}</p>`;
       }
-    }
-  }
+    },
+  },
 };
 </script>
 
