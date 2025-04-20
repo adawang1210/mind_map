@@ -12,7 +12,7 @@
 
 ## 🖼️ 介面預覽
 
-![介面預覽圖](./preview.png) <!-- 可自行放上截圖並命名為 preview.png -->
+![介面預覽圖]([./preview.png](https://raw.githubusercontent.com/ssshooter/mind-elixir-core/master/images/screenshot2.png)) 
 
 ## 📦 前端技術
 
@@ -27,8 +27,20 @@
 
 ## 📂 專案結構
 
-frontend/ ├── public/ ├── src/ │ ├── components/ │ │ └── MindMapUploader.vue │ └── App.vue ├── package.json └── ... backend/ ├── app.py ├── requirements.txt └── ...
-
+├── backend
+│   ├── app.py
+│   ├── pdf_processor.py
+│   └── uploads
+├── frontend
+│   ├── README.md
+│   ├── babel.config.js
+│   ├── jsconfig.json
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   ├── src
+│   └── vue.config.js
+└── structure.txt
 shell
 複製
 編輯
