@@ -9,7 +9,7 @@ model = genai.GenerativeModel("gemini-1.5-pro")
 
 # 完整的 prompt
 prompt = '''
-你是一個法國歷史專家，我將提供一段關於法國歷史的文獻（可能是文本、摘要或 PDF 內容），你的任務是根據以下規範性框架分析並概括其內容，並將分析結果以指定的 JSON 格式輸出。如果文獻是法文，請直接根據法文分析並用中文回覆。以下是分析框架：
+你是一個法國歷史專家，我將提供一段關於法國歷史的文獻（可能是文本、摘要或 PDF 內容），你的任務是根據以下規範性框架分析並概括其內容，並將分析結果以指定的格式輸出。如果文獻是法文，請直接根據法文分析並用中文回覆。以下是分析框架：
 
 1. **主題和論點**
     - (1) 主題：文獻探討的主要主題是什麼？（例如：文明與文化、政治變革）
@@ -17,7 +17,7 @@ prompt = '''
     - (3) 事件：文獻提到的重大歷史事件有哪些？（包括名稱、時間點、類型）
 2. **背景與時期**
     - (1) 背景：文獻涉及的歷史背景是什麼？（例如：社會環境、國際局勢）
-    - (2) 時期：文獻涵蓋的具體歷史時期或年代是什麼？（例如：公元前58年至公元472年）
+    - (2) 時期：文獻涵蓋的具體歷史時期或年代是什麼?（例如:公元前58年至公元472年）
 3. **地點**
     - (1) 地理：文獻涉及的具體地點或地理範圍是什麼？（例如：高盧、萊茵河）
 4. **人物**
@@ -34,103 +34,77 @@ prompt = '''
 **請務必只回傳要求格式的內容，不要包含額外的文字描述。**
 
 **輸出要求：**
-- 你的回答**必須**符合以下 格式：
+- 你的回答**必須**符合以下 請後端回傳純 JSON 結構格式：
 
-const nodeData = {
-  topic: '法國歷史分析',
-  id: 'history_root_001',
-  style: { fontSize: '32', color: '#2c3e50', background: '#ecf0f1' },
-  expanded: true,
-  parent: null,
-  tags: ['歷史', '法國'],
-  icons: ['📜'],
-  children: [
+{
+  "id": "history_root_001",
+  "parent": null,
+  "children": [
     {
-      topic: '主題與論點',
-      id: 'themes_arguments_001',
-      expanded: true,
-      parent: 'history_root_001',
-      children: [
-        { topic: '主題', id: 'themes_001', parent: 'themes_arguments_001', children: [], tags: ['文明', '政治'] },
-        { topic: '論點', id: 'arguments_001', parent: 'themes_arguments_001', children: [], hyperLink: '' },
-        { topic: '事件', id: 'events_001', parent: 'themes_arguments_001', children: [], tags: ['革命', '戰爭'] }
+      "id": "themes_arguments_001",
+      "parent": "history_root_001",
+      "children": [
+        { "id": "themes_001", "parent": "themes_arguments_001" },
+        { "id": "arguments_001", "parent": "themes_arguments_001" },
+        { "id": "events_001", "parent": "themes_arguments_001" }
       ]
     },
     {
-      topic: '背景與時期',
-      id: 'context_period_001',
-      expanded: true,
-      parent: 'history_root_001',
-      children: [
-        { topic: '背景', id: 'context_001', parent: 'context_period_001', children: [] },
-        { topic: '時期', id: 'period_001', parent: 'context_period_001', children: [] }
+      "id": "context_period_001",
+      "parent": "history_root_001",
+      "children": [
+        { "id": "context_001", "parent": "context_period_001" },
+        { "id": "period_001", "parent": "context_period_001" }
       ]
     },
     {
-      topic: '地點',
-      id: 'location_001',
-      expanded: true,
-      parent: 'history_root_001',
-      children: [
-        { topic: '地理範圍', id: 'geography_001', parent: 'location_001', children: [], tags: ['高盧', '巴黎'] }
+      "id": "location_001",
+      "parent": "history_root_001",
+      "children": [
+        { "id": "geography_001", "parent": "location_001" }
       ]
     },
     {
-      topic: '人物',
-      id: 'characters_001',
-      expanded: true,
-      parent: 'history_root_001',
-      children: [
+      "id": "characters_001",
+      "parent": "history_root_001",
+      "children": [
         {
-          topic: '人物1',
-          id: 'character_001',
-          parent: 'characters_001',
-          children: [
-            { topic: '評價', id: 'eval_001', parent: 'character_001', children: [] },
-            { topic: '姓名', id: 'name_001', parent: 'character_001', children: [] },
-            { topic: '地位', id: 'status_001', parent: 'character_001', children: [] }
+          "id": "character_001",
+          "parent": "characters_001",
+          "children": [
+            { "id": "eval_001", "parent": "character_001" },
+            { "id": "name_001", "parent": "character_001" },
+            { "id": "status_001", "parent": "character_001" }
           ]
         }
       ]
     },
     {
-      topic: '組織',
-      id: 'organizations_001',
-      expanded: true,
-      parent: 'history_root_001',
-      children: [], // 可動態添加具體組織
-      tags: ['軍團', '政府']
+      "id": "organizations_001",
+      "parent": "history_root_001"
     },
     {
-      topic: '核心概念',
-      id: 'concepts_001',
-      expanded: true,
-      parent: 'history_root_001',
-      children: [], // 可動態添加概念
-      tags: ['自由', '君主制']
+      "id": "concepts_001",
+      "parent": "history_root_001"
     },
     {
-      topic: '影響與意義',
-      id: 'impact_significance_001',
-      expanded: true,
-      parent: 'history_root_001',
-      children: [
-        { topic: '短期影響', id: 'short_term_001', parent: 'impact_significance_001', children: [] },
-        { topic: '長期意義', id: 'long_term_001', parent: 'impact_significance_001', children: [] }
+      "id": "impact_significance_001",
+      "parent": "history_root_001",
+      "children": [
+        { "id": "short_term_001", "parent": "impact_significance_001" },
+        { "id": "long_term_001", "parent": "impact_significance_001" }
       ]
     },
     {
-      topic: '思維導圖建議',
-      id: 'mind_map_suggestion_001',
-      expanded: true,
-      parent: 'history_root_001',
-      children: [
-        { topic: '主軸概念', id: 'theme_suggestion_001', parent: 'mind_map_suggestion_001', children: [] },
-        { topic: '理由', id: 'reason_001', parent: 'mind_map_suggestion_001', children: [] }
+      "id": "mind_map_suggestion_001",
+      "parent": "history_root_001",
+      "children": [
+        { "id": "theme_suggestion_001", "parent": "mind_map_suggestion_001" },
+        { "id": "reason_001", "parent": "mind_map_suggestion_001" }
       ]
     }
   ]
-};
+}
 
 '''
 

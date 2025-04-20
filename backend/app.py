@@ -1,9 +1,12 @@
 # app.py
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import os
 from pdf_processor import analyze_french_history, prompt  # 導入 prompt
 
 app = Flask(__name__)
+CORS(app)
+
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -52,4 +55,4 @@ def upload_file():
         return jsonify({'error': 'Invalid file format. Please upload a PDF'}), 400
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='127.0.0.1', port=5000, debug=True)
