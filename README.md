@@ -12,11 +12,11 @@
 
 ## 🖼️ 介面預覽
 
-![介面預覽圖]([./preview.png](https://raw.githubusercontent.com/ssshooter/mind-elixir-core/master/images/screenshot2.png)) 
+
 
 ## 📦 前端技術
 
-- Vue 2.x
+- Vue 3
 - MindElixir（思維導圖）
 - Axios（與 Flask 後端溝通）
 
