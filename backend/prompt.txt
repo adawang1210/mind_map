@@ -23,73 +23,90 @@
 **請務必只回傳要求格式的內容，不要包含額外的文字描述。**
 
 **輸出要求：**
-- 你的回答**必須**符合以下 請後端回傳純 JSON 結構格式：
+- 你的回答**必須**符合以下 JSON 結構格式。
+- 所有節點（包括根節點與所有子節點）**必須包含 `text` 欄位**，其內容需與節點功能或分類相對應，並用中文簡潔表達該節點的主題或內容（例如："歷史背景"、"核心論點"、"拿破崙的改革" 等）。
 
 {
   "id": "history_root_001",
-  "parent": null,
+  "topic": "",
   "children": [
     {
       "id": "themes_arguments_001",
-      "parent": "history_root_001",
+      "topic": "主題與論點",
       "children": [
-        { "id": "themes_001", "parent": "themes_arguments_001" },
-        { "id": "arguments_001", "parent": "themes_arguments_001" },
-        { "id": "events_001", "parent": "themes_arguments_001" }
+        { "id": "themes_001", "topic": "主題" },
+        { "id": "arguments_001", "topic": "論點" },
+        { "id": "events_001", "topic": "重大事件" }
       ]
     },
     {
       "id": "context_period_001",
-      "parent": "history_root_001",
+      "topic": "背景與時期",
       "children": [
-        { "id": "context_001", "parent": "context_period_001" },
-        { "id": "period_001", "parent": "context_period_001" }
+        { "id": "context_001", "topic": "歷史背景" },
+        { "id": "period_001", "topic": "歷史時期" }
       ]
     },
     {
       "id": "location_001",
-      "parent": "history_root_001",
+      "topic": "地理位置",
       "children": [
-        { "id": "geography_001", "parent": "location_001" }
+        { "id": "geography_001", "topic": "具體地點" }
       ]
     },
     {
       "id": "characters_001",
-      "parent": "history_root_001",
+      "topic": "重要人物",
       "children": [
         {
           "id": "character_001",
-          "parent": "characters_001",
+          "topic": "人物A",
           "children": [
-            { "id": "eval_001", "parent": "character_001" },
-            { "id": "name_001", "parent": "character_001" },
-            { "id": "status_001", "parent": "character_001" }
+            { "id": "eval_001", "topic": "情緒與評價" },
+            { "id": "name_001", "topic": "姓名" },
+            { "id": "status_001", "topic": "角色地位" }
           ]
         }
       ]
     },
     {
       "id": "organizations_001",
-      "parent": "history_root_001"
+      "topic": "關鍵組織",
+      "children": [
+        {
+          "id": "organization_001",
+          "topic": "組織A",
+          "children": [
+            { "id": "eval_001", "topic": "歷史評價" },
+            { "id": "name_001", "topic": "名稱" },
+            { "id": "status_001", "topic": "功能或類型" }
+          ]
+        }
+      ]
     },
     {
       "id": "concepts_001",
-      "parent": "history_root_001"
+      "topic": "核心概念",
+      "children": [
+        { "id": "concept_001", "topic": "自由" },
+        { "id": "concept_002", "topic": "君主制" },
+        { "id": "concept_003", "topic": "民族認同" }
+      ]
     },
     {
       "id": "impact_significance_001",
-      "parent": "history_root_001",
+      "topic": "影響與意義",
       "children": [
-        { "id": "short_term_001", "parent": "impact_significance_001" },
-        { "id": "long_term_001", "parent": "impact_significance_001" }
+        { "id": "short_term_001", "topic": "短期影響" },
+        { "id": "long_term_001", "topic": "長期意義" }
       ]
     },
     {
       "id": "mind_map_suggestion_001",
-      "parent": "history_root_001",
+      "topic": "心智圖建議",
       "children": [
-        { "id": "theme_suggestion_001", "parent": "mind_map_suggestion_001" },
-        { "id": "reason_001", "parent": "mind_map_suggestion_001" }
+        { "id": "theme_suggestion_001", "topic": "推薦主題" },
+        { "id": "reason_001", "topic": "推薦理由" }
       ]
     }
   ]
