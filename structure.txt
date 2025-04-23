@@ -1,0 +1,17 @@
+.
+├── backend
+│   ├── app.py
+│   ├── pdf_processor.py
+│   └── uploads
+├── frontend
+│   ├── README.md
+│   ├── babel.config.js
+│   ├── jsconfig.json
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   ├── src
+│   └── vue.config.js
+└── structure.txt
+
+6 directories, 9 files

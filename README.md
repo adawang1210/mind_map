@@ -12,11 +12,11 @@
 
 ## 🖼️ 介面預覽
 
-![介面預覽圖]([./preview.png](https://raw.githubusercontent.com/ssshooter/mind-elixir-core/master/images/screenshot2.png)) 
+
 
 ## 📦 前端技術
 
-- Vue 2.x
+- Vue 3
 - MindElixir（思維導圖）
 - Axios（與 Flask 後端溝通）
 
@@ -29,7 +29,7 @@
 
 ├── backend
 │   ├── app.py
-│   ├── pdf_processor.py
+│   ├── pdf_processor.py  # Gemini Ai處理pdf長文
 │   └── uploads
 ├── frontend
 │   ├── README.md
@@ -39,6 +39,9 @@
 │   ├── package.json
 │   ├── public
 │   ├── src
+│   │     ├── components/views
+│   │                      ├── MindMap.vue
+│   │                      ├── PdfUploader
 │   └── vue.config.js
 └── structure.txt
 shell
@@ -53,10 +56,8 @@ shell
 cd frontend
 npm install
 npm run serve
+
 🐍 啟動後端
-bash
-複製
-編輯
 cd backend
 pip install -r requirements.txt
 python app.py
@@ -64,26 +65,6 @@ Flask 預設會跑在 http://127.0.0.1:5000，前端會呼叫 /upload API 來處
 
 🧠 Gemini 回傳格式（範例）
 後端會回傳符合 MindElixir 的 nodeData 結構：
-
-json
-複製
-編輯
-{
-  "id": "history_root_001",
-  "topic": "法國早期文學",
-  "root": true,
-  "children": [
-    {
-      "id": "themes_arguments_001",
-      "topic": "主題與論點",
-      "children": [
-        { "id": "themes_001", "topic": "史詩歌謠" },
-        { "id": "arguments_001", "topic": "社會背景與文學形式" }
-      ]
-    }
-  ]
-}
-注意：實際後端需要對 Gemini 結果做 JSON 清理與轉換以符合 MindElixir 的資料格式。
 
 📤 導出心智圖為 PNG
 只需點擊「匯出為 PNG」按鈕，即可將當前導圖保存為圖片。
