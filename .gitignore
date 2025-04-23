@@ -17,4 +17,5 @@ __pycache__/
 
 # VSCode 設定檔（可選）
 .vscode/
+
 venv/

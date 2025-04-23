@@ -1,3 +1,0 @@
-Flask==2.2.5
-Flask_Cors==5.0.0
-protobuf==6.30.2
