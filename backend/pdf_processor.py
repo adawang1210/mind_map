@@ -3,15 +3,101 @@ import os
 import logging
 import google.generativeai as genai
 from sentence_transformers import SentenceTransformer, util
+import time
+import random
 
 # Configure logging system
 logger = logging.getLogger(__name__)
 
-# Use environment variable to get API key
-gemini_key = "AIzaSyCVRn89Q4lURX5-Sy_Sdw-Ncv6zNEqbtEc"
-genai.configure(api_key=gemini_key)
-model = genai.GenerativeModel("gemini-1.5-pro")
+# API key rotation system
+class ApiKeyManager:
+    def __init__(self, api_keys):
+        self.api_keys = api_keys
+        self.current_key_index = 0
+        self.last_request_time = 0
+        self.min_delay_seconds = 3  # Minimum delay between requests
+        logger.info(f"API Key Manager initialized with {len(api_keys)} keys")
+    
+    def get_current_key(self):
+        return self.api_keys[self.current_key_index]
+    
+    def rotate_key(self):
+        self.current_key_index = (self.current_key_index + 1) % len(self.api_keys)
+        logger.info(f"Rotated to API key index: {self.current_key_index}")
+        return self.get_current_key()
+    
+    def get_key_with_delay(self):
+        # Add a small delay between requests to avoid hitting rate limits
+        current_time = time.time()
+        time_since_last = current_time - self.last_request_time
+        
+        if time_since_last < self.min_delay_seconds:
+            sleep_time = self.min_delay_seconds - time_since_last
+            logger.info(f"Rate limiting: Sleeping for {sleep_time:.2f} seconds")
+            time.sleep(sleep_time)
+        
+        # Update the last request time
+        self.last_request_time = time.time()
+        
+        # Return the current key
+        return self.get_current_key()
+    
+    def handle_error(self, error):
+        """Handle API errors by potentially rotating keys"""
+        if "429" in str(error) or "quota" in str(error).lower():
+            logger.warning(f"Rate limit error detected: {error}")
+            new_key = self.rotate_key()
+            logger.info(f"Rotated to a new API key due to rate limiting")
+            return new_key
+        return self.get_current_key()
+
+# List of available API keys
+gemini_keys = [
+    "AIzaSyCVRn89Q4lURX5-Sy_Sdw-Ncv6zNEqbtEc",
+    "AIzaSyBDzyqi3w1IGGwaNFH9UVEFmp2HQJGAvqM",
+    "AIzaSyBU766ozqy50DDml8pMdNAC6LaZEcIlc70"
+]
+
+# Initialize the API key manager
+key_manager = ApiKeyManager(gemini_keys)
+
+# Configure initial API key
+genai.configure(api_key=key_manager.get_current_key())
 sim_model = SentenceTransformer("all-MiniLM-L6-v2")
+
+# Function to generate content with automatic key rotation on rate limiting
+def generate_with_retry(model_name="gemini-1.5-pro", content=None, max_retries=3):
+    """Generate content with auto key rotation and retry on rate limits"""
+    retries = 0
+    
+    while retries < max_retries:
+        try:
+            # Get a key (with built-in rate limiting)
+            current_key = key_manager.get_key_with_delay()
+            
+            # Configure the API with the current key
+            genai.configure(api_key=current_key)
+            model = genai.GenerativeModel(model_name)
+            
+            # Make the API call
+            response = model.generate_content(content)
+            return response
+        
+        except Exception as e:
+            retries += 1
+            logger.warning(f"API error (attempt {retries}/{max_retries}): {str(e)}")
+            
+            # Handle the error (possibly rotate keys)
+            key_manager.handle_error(e)
+            
+            if retries >= max_retries:
+                logger.error(f"Failed after {max_retries} attempts")
+                raise
+            
+            # Add exponential backoff
+            backoff_time = 2 ** retries + random.uniform(0, 1)
+            logger.info(f"Backing off for {backoff_time:.2f} seconds")
+            time.sleep(backoff_time)
 
 def load_prompt(prompt_path="./prompt.txt"):
     """Load prompt file"""
@@ -42,15 +128,20 @@ def analyze_french_history(pdf_files, prompt):
         contents.append({"mime_type": "application/pdf", "data": pdf_content})
     
     logger.info("Sending request to Gemini AI model")
-    response = model.generate_content(
-        contents=[prompt] + contents
-    )
-    
-    prompt_token = response.usage_metadata.prompt_token_count
-    output_token = response.usage_metadata.candidates_token_count
-    
-    logger.info(f"Received AI response - Prompt tokens: {prompt_token}, Output tokens: {output_token}")
-    return response.text, prompt_token, output_token
+    try:
+        response = generate_with_retry(
+            model_name="gemini-1.5-pro",
+            content=[prompt] + contents
+        )
+        
+        prompt_token = response.usage_metadata.prompt_token_count
+        output_token = response.usage_metadata.candidates_token_count
+        
+        logger.info(f"Received AI response - Prompt tokens: {prompt_token}, Output tokens: {output_token}")
+        return response.text, prompt_token, output_token
+    except Exception as e:
+        logger.error(f"Failed to process PDF: {str(e)}")
+        raise
 
 def get_pdf_files_from_uploads(upload_folder="./uploads"):
     """Get all PDF files from upload folder"""
@@ -108,7 +199,7 @@ Content to evaluate:
 """ + text
         
         logger.debug(f"[{self.name}] Sending evaluation request to AI model")
-        response = model.generate_content(instruction)
+        response = generate_with_retry(content=instruction)
         
         try:
             score = float(response.text.strip().split("\n")[0])
@@ -143,7 +234,7 @@ Content to evaluate:
 """ + text
         
         logger.debug(f"[{self.name}] Sending evaluation request to AI model")
-        response = model.generate_content(instruction)
+        response = generate_with_retry(content=instruction)
         
         try:
             lines = response.text.split("\n")
@@ -166,7 +257,7 @@ Content to evaluate:
             "score": qa_score,
             "threshold": self.threshold,
             "passed": passed,
-            "feedback": f"QA test score: {qa_score:.2f}%",
+            "feedback": f"QA test score: {qa_score:.2f}%", 
             "questions": response.text
         }
 
