@@ -1,112 +1,19 @@
 # pdf_processor.py
 import os
 import google.generativeai as genai
+from sentence_transformers import SentenceTransformer, util
 
 # 使用環境變數獲取 API 金鑰
 gemini_key = "AIzaSyCVRn89Q4lURX5-Sy_Sdw-Ncv6zNEqbtEc"
 genai.configure(api_key=gemini_key)
 model = genai.GenerativeModel("gemini-1.5-pro")
+sim_model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# 完整的 prompt
-prompt = '''
-你是一個法國歷史專家，我將提供一段關於法國歷史的文獻（可能是文本、摘要或 PDF 內容），你的任務是根據以下規範性框架分析並概括其內容，並將分析結果以指定的格式輸出。如果文獻是法文，請直接根據法文分析並用中文回覆。以下是分析框架：
-
-1. **主題和論點**
-    - (1) 主題：文獻探討的主要主題是什麼？（例如：文明與文化、政治變革）
-    - (2) 論點：作者的核心主張或觀點是什麼？（註明是否具爭議性）
-    - (3) 事件：文獻提到的重大歷史事件有哪些？（包括名稱、時間點、類型）
-2. **背景與時期**
-    - (1) 背景：文獻涉及的歷史背景是什麼？（例如：社會環境、國際局勢）
-    - (2) 時期：文獻涵蓋的具體歷史時期或年代是什麼?（例如:公元前58年至公元472年）
-3. **地點**
-    - (1) 地理：文獻涉及的具體地點或地理範圍是什麼？（例如：高盧、萊茵河）
-4. **人物**
-    - (1) 情緒：僅根據文獻內容提取人物的情感、動機或歷史評價，不進行額外推測或主觀解讀，確保資訊直接來自文本。
-    - (2) 名字：涉及哪些重要人物？（提供全名或稱號）
-    - (3) 地位：這些人物的角色或權力地位是什麼？（例如：軍事領袖）
-5. **組織（政治、軍事或社會團體）**
-    - 文獻中提到的關鍵組織是什麼？（例如：羅馬軍團，註明類型與功能）
-6. **涉及的核心概念（抽象名詞）**
-    - 僅從文獻中提取最多三個原文提及的抽象概念（例如：自由、君主制），不額外推測或創造新概念，確保概念準確反映文獻內容。
-7. **影響和意義**
-    - 文獻描述的歷史發展對法國有什麼影響和意義？（分為短期影響、長期意義)
-
-**請務必只回傳要求格式的內容，不要包含額外的文字描述。**
-
-**輸出要求：**
-- 你的回答**必須**符合以下 請後端回傳純 JSON 結構格式：
-
-{
-  "id": "history_root_001",
-  "parent": null,
-  "children": [
-    {
-      "id": "themes_arguments_001",
-      "parent": "history_root_001",
-      "children": [
-        { "id": "themes_001", "parent": "themes_arguments_001" },
-        { "id": "arguments_001", "parent": "themes_arguments_001" },
-        { "id": "events_001", "parent": "themes_arguments_001" }
-      ]
-    },
-    {
-      "id": "context_period_001",
-      "parent": "history_root_001",
-      "children": [
-        { "id": "context_001", "parent": "context_period_001" },
-        { "id": "period_001", "parent": "context_period_001" }
-      ]
-    },
-    {
-      "id": "location_001",
-      "parent": "history_root_001",
-      "children": [
-        { "id": "geography_001", "parent": "location_001" }
-      ]
-    },
-    {
-      "id": "characters_001",
-      "parent": "history_root_001",
-      "children": [
-        {
-          "id": "character_001",
-          "parent": "characters_001",
-          "children": [
-            { "id": "eval_001", "parent": "character_001" },
-            { "id": "name_001", "parent": "character_001" },
-            { "id": "status_001", "parent": "character_001" }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "organizations_001",
-      "parent": "history_root_001"
-    },
-    {
-      "id": "concepts_001",
-      "parent": "history_root_001"
-    },
-    {
-      "id": "impact_significance_001",
-      "parent": "history_root_001",
-      "children": [
-        { "id": "short_term_001", "parent": "impact_significance_001" },
-        { "id": "long_term_001", "parent": "impact_significance_001" }
-      ]
-    },
-    {
-      "id": "mind_map_suggestion_001",
-      "parent": "history_root_001",
-      "children": [
-        { "id": "theme_suggestion_001", "parent": "mind_map_suggestion_001" },
-        { "id": "reason_001", "parent": "mind_map_suggestion_001" }
-      ]
-    }
-  ]
-}
-
-'''
+def load_prompt(prompt_path="./prompt.txt"):
+    if not os.path.exists(prompt_path):
+        raise FileNotFoundError(f"找不到 prompt 檔案: {prompt_path}")
+    with open(prompt_path, "r", encoding="utf-8") as f:
+        return f.read()
 
 def analyze_french_history(pdf_files, prompt):
     contents = []
@@ -124,14 +31,77 @@ def analyze_french_history(pdf_files, prompt):
     output_token = response.usage_metadata.candidates_token_count
     return response.text, prompt_token, output_token
 
-def get_pdf_files_from_uploads(upload_folder="uploads"):
+def get_pdf_files_from_uploads(upload_folder="./uploads"):
     if not os.path.exists(upload_folder):
         os.makedirs(upload_folder)
     pdf_files = [os.path.join(upload_folder, f) for f in os.listdir(upload_folder) if f.endswith('.pdf')]
     return pdf_files
 
+# ---------- Validator Agent 1: Semantic Similarity ----------
+def semantic_validation(generated, reference):
+    emb1 = sim_model.encode(generated, convert_to_tensor=True)
+    emb2 = sim_model.encode(reference, convert_to_tensor=True)
+    score = float(util.pytorch_cos_sim(emb1, emb2).item())
+    return score * 100  # 百分比表示
+
+# ---------- Validator Agent 2: Factual Accuracy ----------
+def factual_validation(text):
+    instruction = "請你評估以下段落的事實正確率（以 0~100 分表示，回傳數字即可）:\n" + text
+    response = model.generate_content(instruction)
+    try:
+        score = float(response.text.strip().split("\n")[0])
+    except:
+        score = 0.0
+    return score
+
+# ---------- Validator Agent 3: QA Testing ----------
+def qa_validation(text):
+    instruction = (
+        "根據以下段落提出 3 個理解測驗問題，並自己回答，再評估回答正確率（0~100 分）\n" + text
+    )
+    response = model.generate_content(instruction)
+    try:
+        lines = response.text.split("\n")
+        for line in lines:
+            if "正確率" in line or "%" in line:
+                score_str = ''.join([c for c in line if c.isdigit() or c == '.'])
+                return float(score_str)
+    except:
+        pass
+    return 0.0
+
+# ---------- Manager Agent ----------
+def manager(generated, 
+            reference, 
+            semantic_validation_threshold=10, 
+            factual_validation_threshold=10, 
+            qa_validation_threshold=10):
+    
+    s_score = semantic_validation(generated, reference)
+    f_score = factual_validation(generated)
+    q_score = qa_validation(generated)
+
+    print(f"語意相似度: {s_score:.2f}%")
+    print(f"事實正確率: {f_score:.2f}%")
+    print(f"QA測驗得分: {q_score:.2f}%")
+
+    passed = (
+        s_score >= semantic_validation_threshold and
+        f_score >= factual_validation_threshold and
+        q_score >= qa_validation_threshold
+    )
+
+    return passed, {
+        "semantic": s_score,
+        "factual": f_score,
+        "qa": q_score
+    }
+
+prompt = load_prompt() 
+
 if __name__ == "__main__":
     pdf_files = get_pdf_files_from_uploads()
+    
     if not pdf_files:
         print("uploads 資料夾中 PDF 檔案")
     else:
@@ -139,3 +109,21 @@ if __name__ == "__main__":
         print(response_text)
         print(f"Total prompt token count: {prompt_token}")
         print(f"Total output token count: {output_token}")
+
+        while True:
+          print("\n>>> 開始分析與驗證...")
+          reference_text = "這裡是你預期的正確內容，用於語意相似度評分"
+          approved, score = manager(response_text, reference_text)
+
+          if approved:
+              print("\n✔ 審核通過，結果送出：")
+              print(reference_text)
+              break
+          else:
+              print("\n✘ 分數不足（%.2f），重新分析..." % score)
+
+
+# 目前進度:
+# 寫了個別的功能 但要把它們串在一起才可以 
+# 每一次都要跑過 manage 判斷分數再丟出答案
+# 還有各自validator prompt要給好一點 讓他知道內容是類json檔案

@@ -122,10 +122,13 @@ export default {
 
         // 去除 markdown 語法
         raw = raw.replace(/^```json\s*/, "").replace(/```$/, "");
+        console.log("This is raw data :" + raw);
 
         // 解析並轉換 text 為 topic
         const nodeData = JSON.parse(raw);
+        console.log("This is nodeData :" + nodeData);
         this.transformTextToTopic(nodeData);
+
 
         this.resultMessage = `
           <p class="success">檔案 <strong>${response.data.filename}</strong> 上傳成功！</p>`;

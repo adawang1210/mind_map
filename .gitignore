@@ -1,0 +1,21 @@
+# 忽略 node_modules（如果你有前端 JS 專案）
+node_modules/
+
+# 忽略 Python 環境（如果你有用到 Python）
+__pycache__/
+*.pyc
+.env
+
+# 忽略上傳的 PDF 檔案
+/backend/uploads/*.pdf
+
+# 忽略 macOS 系統自動生成的檔案
+.DS_Store
+
+# 忽略 log 檔
+*.log
+
+# VSCode 設定檔（可選）
+.vscode/
+
+venv/

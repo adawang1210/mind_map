@@ -7,7 +7,7 @@ from pdf_processor import analyze_french_history, prompt  # 導入 prompt
 app = Flask(__name__)
 CORS(app)
 
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = './uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 if not os.path.exists(UPLOAD_FOLDER):
@@ -15,7 +15,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 @app.route('/')
 def index():
-    return app.send_static_file('index.html')
+    return "I am backend i am running"
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
