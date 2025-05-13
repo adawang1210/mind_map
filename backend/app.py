@@ -2,16 +2,31 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
-from pdf_processor import analyze_french_history, prompt  # 導入 prompt
+from pdf_processor import analyze_french_history, prompt
+from quiz_generator import quiz_bp
 
 app = Flask(__name__)
-CORS(app)
+# 配置 CORS
+CORS(app, 
+     resources={
+         r"/*": {  # 允許所有路由
+             "origins": ["http://localhost:8080"],
+             "methods": ["GET", "POST", "OPTIONS"],
+             "allow_headers": ["Content-Type"],
+             "supports_credentials": True,
+             "expose_headers": ["Content-Type", "X-CSRFToken"],
+             "max_age": 600
+         }
+     })
 
 UPLOAD_FOLDER = './uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
+# 註冊 quiz blueprint
+app.register_blueprint(quiz_bp)
 
 @app.route('/')
 def index():
@@ -54,5 +69,34 @@ def upload_file():
         print(f"控制台訊息: 收到無效檔案格式: {file.filename}")
         return jsonify({'error': 'Invalid file format. Please upload a PDF'}), 400
 
+@app.route('/api/analyze', methods=['POST'])
+def analyze():
+    try:
+        # 獲取上傳的文件
+        if 'file' not in request.files:
+            return jsonify({'error': '沒有上傳文件'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': '沒有選擇文件'}), 400
+        
+        # 保存文件
+        file_path = f"uploads/{file.filename}"
+        file.save(file_path)
+        
+        # 分析文件
+        result, prompt_token, output_token = analyze_french_history([file_path], prompt)
+        
+        return jsonify({
+            'success': True,
+            'result': result,
+            'token_usage': {
+                'prompt_tokens': prompt_token,
+                'output_tokens': output_token
+            }
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)
