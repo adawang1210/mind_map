@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app, 
      resources={
          r"/*": {  # 允許所有路由
-             "origins": ["http://localhost:8080"],
+             "origins": ["http://localhost:8080", "http://localhost:8081"],
              "methods": ["GET", "POST", "OPTIONS"],
              "allow_headers": ["Content-Type"],
              "supports_credentials": True,
