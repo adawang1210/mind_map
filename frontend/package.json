@@ -8,7 +8,8 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "axios": "^1.8.4",
+    "@mdi/font": "^7.4.47",
+    "axios": "^1.9.0",
     "core-js": "^3.8.3",
     "mind": "file:",
     "mind-elixir": "^4.5.0",

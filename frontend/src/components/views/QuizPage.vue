@@ -143,29 +143,7 @@
 <script setup>
 // Vue Composition API
 import { ref, computed, onMounted } from 'vue'
-
-// 原始題庫資料（包含單選與是非題）
-const rawQuestions = [
-  { type: 'single', question: '誰是三國時期的著名軍事家？', options: ['孔子', '劉備', '孫子', '司馬遷'], correct: 2 },
-  { type: 'single', question: '以下哪一個事件發生在法國大革命期間？', options: ['波士頓茶葉事件', '攻佔巴士底監獄', '十月革命', '辛亥革命'], correct: 1 },
-  { type: 'true-false', question: '太陽是地球的中心？', correct: false },
-  {
-  type: "single",         // "single" or "true-false"
-  question: "題目文字",
-  options: [
-    "選項A",
-    "選項B",
-    "選項C",
-    "選項D"
-  ],
-  correct: 2              // index 或 true/false
-  },
-  {
-    type: "true-false",
-    question: "題目文字",
-    correct: false
-  }
-]
+import axios from 'axios'
 
 // 狀態變數
 const questions = ref([])
@@ -181,24 +159,33 @@ const quizFinished = ref(false)
 const currentQuestion = computed(() => questions.value[currentQuestionIndex.value])
 const progressPercentage = computed(() => Math.round((answeredCount.value / questions.value.length) * 100))
 
-// 洗牌函式
-function shuffleArray(arr) {
-  return arr.map(value => [Math.random(), value]).sort(([a], [b]) => a - b).map(([, value]) => value)
+// 從API獲取問題
+async function fetchQuestions() {
+  try {
+    const response = await axios.get('/api/quiz/questions')
+
+
+    console.log("這是response", response)
+
+    if (response.data.success) {
+      questions.value = response.data.questions
+    } else {
+      console.error('獲取問題失敗:', response.data.error)
+      alert('獲取問題失敗，請稍後重試')
+    }
+  } catch (error) {
+    console.error('API請求錯誤:', error)
+    if (error.code === 'ERR_CONNECTION_REFUSED') {
+      alert('無法連接到後端服務器，請確保後端服務器正在運行')
+    } else {
+      alert('獲取問題失敗，請稍後重試')
+    }
+  }
 }
 
-// 初始化題庫並打亂選項與題目順序
-function initQuiz() {
-  const shuffled = shuffleArray(rawQuestions.map(q => {
-    if (q.type === 'single') {
-      const originalOptions = [...q.options]
-      const shuffledOptions = shuffleArray(originalOptions)
-      const correctText = q.options[q.correct]
-      const newCorrectIndex = shuffledOptions.indexOf(correctText)
-      return { ...q, options: shuffledOptions, correct: newCorrectIndex }
-    }
-    return { ...q }
-  }))
-  questions.value = shuffled
+// 初始化測驗
+async function initQuiz() {
+  await fetchQuestions()
 }
 
 // 使用者點擊選項後的處理
