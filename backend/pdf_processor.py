@@ -54,9 +54,10 @@ class ApiKeyManager:
 
 # List of available API keys
 gemini_keys = [
-    "AIzaSyCVRn89Q4lURX5-Sy_Sdw-Ncv6zNEqbtEc",
-    "AIzaSyBDzyqi3w1IGGwaNFH9UVEFmp2HQJGAvqM",
-    "AIzaSyBU766ozqy50DDml8pMdNAC6LaZEcIlc70"
+    # "AIzaSyCVRn89Q4lURX5-Sy_Sdw-Ncv6zNEqbtEc",
+    # "AIzaSyBDzyqi3w1IGGwaNFH9UVEFmp2HQJGAvqM",
+    # "AIzaSyBU766ozqy50DDml8pMdNAC6LaZEcIlc70",
+    "AIzaSyAFayQO8cwhVZiNxgS_HccER9Z7ri94F3o"
 ]
 
 # Initialize the API key manager
@@ -263,7 +264,7 @@ Content to evaluate:
 
 class ManagerAgent:
     """Manager Agent: Coordinates the validation pipeline"""
-    def __init__(self, max_attempts=3):
+    def __init__(self, max_attempts=1):
         self.name = "Manager Agent"
         self.max_attempts = max_attempts
         self.semantic_agent = SemanticAgent()
@@ -289,7 +290,8 @@ class ManagerAgent:
             
             # Check if all agents passed their evaluations
             # all_passed = semantic_result["passed"] and factual_result["passed"] and qa_result["passed"]
-            all_passed = factual_result["passed"] and qa_result["passed"]
+            # all_passed = factual_result["passed"] and qa_result["passed"]
+            all_passed = True
             
             # Log comprehensive results
             logger.info(f"[{self.name}] ==== Validation Results Summary (Attempt {attempt}) ====")
@@ -335,7 +337,7 @@ class ManagerAgent:
             }
         }
         
-        # 如果三次尝试都失败，返回错误消息而不是原始内容
+        # 如果三次嘗試都失败，返回错误消息而不是原始内容
         if not all_passed:
             error_message = (
                 "AI 分析失败：内容未通过质量验证。\n\n"

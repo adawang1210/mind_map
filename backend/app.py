@@ -53,6 +53,7 @@ REFERENCE_TEXT = """The development of French history can be traced back to the 
 when it was called Gaul. It then went through important historical stages such as the Frankish Kingdom 
 in the Middle Ages, religious wars during the Renaissance, and the Enlightenment and the French Revolution."""
 
+# 測試用
 @app.route('/')
 def index():
     logger.info("Root path request received")
@@ -63,6 +64,7 @@ def index():
         "timestamp": datetime.now().isoformat()
     })
 
+# 上傳PDF檔案
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
     logger.info("File upload request received")
@@ -180,6 +182,7 @@ def process_pdf_task(task_id, filepath, filename):
             "error": str(e)
         })
 
+# 取得任務狀態
 @app.route('/api/tasks/<task_id>', methods=['GET'])
 def get_task(task_id):
     logger.info(f"Task status request received for task ID: {task_id}")
@@ -208,6 +211,7 @@ def get_task(task_id):
             "created_at": task["created_at"],
             "result": task["result"]
         })
+
 
 if __name__ == '__main__':
     logger.info("Starting Flask application server...")
