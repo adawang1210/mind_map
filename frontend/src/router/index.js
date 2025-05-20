@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
-import MindMap from "../components/views/MindMap.vue";
-import QuizPage from "../components/views/QuizPage.vue";
-import HomePage from "../components/views/HomePage.vue";
+import MindMap from "../views/MindMap.vue";
+import QuizPage from "../views/QuizPage.vue";
+import HomePage from "../views/HomePage.vue";
 
 const routes = [
   { path: "/", redirect: "/homepage" },
