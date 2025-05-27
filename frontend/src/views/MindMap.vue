@@ -18,8 +18,28 @@
             <v-btn color="primary" @click="$refs.fileInput.click()">
               {{ fileName || "點擊選擇檔案" }}
             </v-btn>
-            <v-btn type="submit" color="success" class="ml-3">上傳</v-btn>
+            <v-btn
+              type="submit"
+              color="success"
+              class="ml-3"
+              :disabled="processing"
+              >上傳</v-btn
+            >
           </form>
+          <div v-if="processing" class="mt-4">
+            <div class="process-status">
+              <div class="process-text">{{ processStage }}</div>
+              <v-progress-linear
+                color="primary"
+                height="20"
+                :value="progress"
+                striped
+                buffer-value="0"
+              >
+                <template v-slot:default> {{ Math.ceil(progress) }}% </template>
+              </v-progress-linear>
+            </div>
+          </div>
           <div v-html="resultMessage" class="mt-4"></div>
         </section>
       </v-col>
@@ -28,14 +48,10 @@
     <!-- 心智圖與快捷鍵並排 -->
     <v-row class="mt-8" dense>
       <!-- 左側心智圖 -->
-      <v-col cols="12" md="10">
+      <v-col cols="12" md="9" class="px-4">
         <section class="mindmap-section pa-4 elevation-2 rounded">
           <h2 class="mb-3">我的心智圖</h2>
-          <div
-            id="map"
-            ref="map"
-            style="border: 1px solid #ddd; height: 1000px; width: 100%"
-          ></div>
+          <div id="map" ref="map" class="mind-map-container"></div>
           <v-btn color="success" class="mt-4" @click="exportPng"
             >匯出為 PNG</v-btn
           >
@@ -43,7 +59,7 @@
       </v-col>
 
       <!-- 右側快捷鍵 -->
-      <v-col cols="12" md="2">
+      <v-col cols="12" md="3" class="px-4">
         <section class="shortcut-section pa-4 elevation-2 rounded">
           <h2 class="mb-3">快捷鍵說明</h2>
           <div class="shortcut-scroll">
@@ -68,13 +84,15 @@ import axios from "axios";
 
 export default {
   name: "MindMapUploader",
-
   data() {
     return {
       mind: null,
       resultMessage: "",
       fileName: "",
       backendUrl: "http://127.0.0.1:5001", // 預先定義後端URL
+      processing: false,
+      progress: 0,
+      processStage: "",
       shortcuts: [
         { key: "Enter", function: "插入同級節點" },
         { key: "Tab", function: "插入子節點" },
@@ -137,6 +155,57 @@ export default {
       const formData = new FormData();
       formData.append("file", fileInput.files[0]);
 
+      // 設置處理狀態
+      this.processing = true;
+      this.progress = 0;
+      this.processStage = "上傳檔案中";
+      this.resultMessage = "";
+
+      // 開始模擬進度
+      const startTime = Date.now();
+      const minProcessTime = 7500; // 最少要7.5秒
+      const maxProcessTime = 15000; // 最多15秒
+
+      // 階段文字
+      const stages = [
+        "上傳檔案中",
+        "分析文件中",
+        "產生心智圖",
+        "進行多重驗證",
+        "產生心智圖",
+        "進行二次多重驗證",
+        "完成",
+      ];
+
+      // 設置進度條計時器
+      const progressTimer = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+
+        // 計算進度
+        if (elapsed < maxProcessTime) {
+          // 隨機增加進度，但不超過5%
+          const randomIncrement = Math.random() * 5;
+          this.progress = Math.min(90, this.progress + randomIncrement); // 根據進度更新階段文字
+          if (this.progress < 15) {
+            this.processStage = stages[0];
+          } else if (this.progress < 30) {
+            this.processStage = stages[1];
+          } else if (this.progress < 45) {
+            this.processStage = stages[2];
+          } else if (this.progress < 60) {
+            this.processStage = stages[3];
+          } else if (this.progress < 75 && Math.random() > 0.45) {
+            this.processStage = stages[4]; // 45%機率進入第二次生成
+          } else if (this.progress < 85 && Math.random() > 0.78) {
+            this.processStage = stages[5]; // 22%機率進入第二次驗證
+          } else if (this.progress >= 85 && this.progress < 100) {
+            this.processStage = "正在準備";
+          } else if (this.progress >= 100) {
+            this.processStage = stages[6];
+          }
+        }
+      }, 300);
+
       try {
         // 發送API請求
         const response = await axios.post(
@@ -150,10 +219,32 @@ export default {
           response.data.analysis_result
         );
 
-        // 處理節點格式並更新心智圖
+        // 處理節點格式
         this.transformTextToTopic(nodeData);
-        this.updateMindMap(nodeData, response.data.filename);
+
+        // 確保至少經過minProcessTime後才顯示結果
+        const elapsed = Date.now() - startTime;
+        if (elapsed < minProcessTime) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, minProcessTime - elapsed)
+          );
+        }
+
+        // 進度設為100%
+        this.progress = 100;
+        this.processStage = "完成";
+
+        // 更新心智圖
+        setTimeout(() => {
+          clearInterval(progressTimer);
+          this.processing = false;
+          this.updateMindMap(nodeData, response.data.filename);
+        }, 500);
       } catch (error) {
+        // 停止計時器
+        clearInterval(progressTimer);
+        this.processing = false;
+
         // 處理錯誤
         this.resultMessage = `<p class="error">上傳失敗: ${
           error.response?.data?.error || error.message
@@ -231,8 +322,26 @@ export default {
 </script>
 
 <style scoped>
+.mindmap-section,
 .shortcut-section {
-  max-height: 1000px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+}
+
+.mind-map-container {
+  flex-grow: 1;
+  aspect-ratio: 3/2; /* 使心智圖呈現正方形 */
+  margin: 0 auto; /* 水平居中 */
+  border: 1px solid #ddd;
+  max-width: 100%; /* 增加寬度至100% */
+  overflow: auto; /* 添加滾動條 */
+  min-height: 0; /* 修復Flex容器中滾動問題 */
+}
+
+.shortcut-section {
+  max-height: 100vh;
   overflow-y: auto;
   background-color: #fff;
   font-size: 14px;
@@ -258,6 +367,16 @@ export default {
 
 .shortcut-func {
   color: #1f2937;
+}
+
+.process-status {
+  margin-bottom: 12px;
+}
+
+.process-text {
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #4b5563;
 }
 
 .success {
