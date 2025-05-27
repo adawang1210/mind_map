@@ -5,9 +5,11 @@ from sentence_transformers import SentenceTransformer, util
 
 # 使用環境變數獲取 API 金鑰
 # gemini_key = "AIzaSyCVRn89Q4lURX5-Sy_Sdw-Ncv6zNEqbtEc"
-gemini_key = "AIzaSyAFayQO8cwhVZiNxgS_HccER9Z7ri94F3o"
+# gemini_key = "AIzaSyAFayQO8cwhVZiNxgS_HccER9Z7ri94F3o"
+gemini_key = "AIzaSyDFKmb0HkhsGedPENUJ8qAOJLabtftMtvw"
 genai.configure(api_key=gemini_key)
-model = genai.GenerativeModel("gemini-1.5-pro")
+# model = genai.GenerativeModel("gemini-1.5-pro")
+model = genai.GenerativeModel("gemini-1.5-flash-latest")
 sim_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 def load_prompt(prompt_path="./prompt.txt"):
@@ -17,20 +19,39 @@ def load_prompt(prompt_path="./prompt.txt"):
         return f.read()
 
 def analyze_french_history(pdf_files, prompt):
-    contents = []
-    for pdf_path in pdf_files:
-        if not os.path.exists(pdf_path):
-            raise FileNotFoundError(f"PDF 檔案不存在: {pdf_path}")
-        with open(pdf_path, "rb") as f:
-            pdf_content = f.read()
-        contents.append({"mime_type": "application/pdf", "data": pdf_content})
-    
-    response = model.generate_content(
-        contents=[prompt] + contents
-    )
-    prompt_token = response.usage_metadata.prompt_token_count
-    output_token = response.usage_metadata.candidates_token_count
-    return response.text, prompt_token, output_token
+    try: 
+        contents = []
+        for pdf_path in pdf_files:
+            if not os.path.exists(pdf_path):
+                raise FileNotFoundError(f"PDF 檔案不存在: {pdf_path}")
+            with open(pdf_path, "rb") as f:
+                pdf_content = f.read()
+            contents.append({"mime_type": "application/pdf", "data": pdf_content})
+        
+        response = model.generate_content(
+            contents=[prompt] + contents
+        )
+        # prompt_token = response.usage_metadata.prompt_token_count
+        # output_token = response.usage_metadata.candidates_token_count
+        # return response.text, prompt_token, output_token
+
+        if hasattr(response, 'usage_metadata'):
+            prompt_token = response.usage_metadata.prompt_token_count
+            output_token = response.usage_metadata.candidates_token_count
+        elif hasattr(response, 'prompt_feedback'):
+            prompt_token = getattr(response.prompt_feedback, 'token_count', 0)
+            output_token = sum(getattr(candidate, 'token_count', 0) for candidate in response.candidates)
+        else:
+            # 如果找不到令牌計數信息，使用預設值
+            print("警告: 無法獲取令牌使用信息，使用預設值")
+            prompt_token = 0
+            output_token = 0
+            
+        return response.text, prompt_token, output_token
+    except Exception as e:
+        print(f"處理PDF時出錯: {str(e)}")
+        # 返回一個默認響應
+        return f"無法處理PDF: {str(e)}", 0, 0
 
 def get_pdf_files_from_uploads(upload_folder="./uploads"):
     if not os.path.exists(upload_folder):
