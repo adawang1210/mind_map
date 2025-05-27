@@ -1,10 +1,17 @@
 <template>
+  <Header />
   <v-container class="pa-4" style="max-width: 1800px; margin: auto">
     <!-- PDF 上傳區塊 -->
     <v-row>
       <v-col cols="12">
-        <section class="pdf-upload-section pa-4">
-          <h2 class="mb-3">上傳 PDF 檔案</h2>
+        <section class="pdf-upload-section pa-12 rounded-lg elevation-1">
+          <h2 class="mb-4 text-h4">上傳 PDF 檔案</h2>
+          <div class="upload-guide mb-4">
+            <p>
+              法文史料上傳，系統的雙層AI (Gemini 1.5 Pro核心)
+              即時生成互動心智圖。複雜歷史視覺化，助您高效理解、輕鬆記憶！
+            </p>
+          </div>
           <form @submit.prevent="uploadFile">
             <input
               type="file"
@@ -52,9 +59,17 @@
         <section class="mindmap-section pa-4 elevation-2 rounded">
           <h2 class="mb-3">我的心智圖</h2>
           <div id="map" ref="map" class="mind-map-container"></div>
-          <v-btn color="success" class="mt-4" @click="exportPng"
-            >匯出為 PNG</v-btn
-          >
+          <div class="export-buttons mt-4">
+            <v-btn color="success" class="me-2" @click="exportPng"
+              >匯出 PNG 檔案</v-btn
+            >
+            <v-btn color="info" class="me-2" @click="exportSvg"
+              >匯出 SVG 向量圖</v-btn
+            >
+            <v-btn color="warning" @click="exportJson">匯出 JSON 結構</v-btn>
+            <v-spacer></v-spacer>
+            <v-btn color="primary" @click="exportJson">儲存後生成測驗</v-btn>
+          </div>
         </section>
       </v-col>
 
@@ -76,14 +91,22 @@
       </v-col>
     </v-row>
   </v-container>
+
+  <Footer />
 </template>
 
 <script>
+import Header from "./AppHeader.vue";
+import Footer from "./AppFooter.vue";
 import MindElixir from "mind-elixir";
 import axios from "axios";
 
 export default {
   name: "MindMapUploader",
+  components: {
+    Header,
+    Footer,
+  },
   data() {
     return {
       mind: null,
@@ -128,7 +151,7 @@ export default {
   mounted() {
     const options = {
       el: "#map",
-      direction: MindElixir.LEFT,
+      direction: MindElixir.SIDE, // 改為SIDE，使心智圖呈現左右對稱
       draggable: true,
       contextMenu: true,
       toolBar: true,
@@ -284,6 +307,41 @@ export default {
       a.click();
       URL.revokeObjectURL(url);
     },
+
+    async exportSvg() {
+      const svg = this.mind.exportSvg();
+      if (!svg) return;
+
+      // 建立 Blob 物件
+      const blob = new Blob([svg], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+
+      // 建立下載連結
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "mindmap.svg";
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+
+    exportJson() {
+      // 獲取當前心智圖的數據
+      const data = this.mind.getData();
+
+      // 轉換為 JSON 字符串
+      const jsonStr = JSON.stringify(data, null, 2);
+
+      // 建立 Blob 物件
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      // 建立下載連結
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "mindmap.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    },
     parseJsonFromResponse(responseText) {
       let raw = responseText;
       raw = raw.trim(); // 先清理前後空白
@@ -306,14 +364,13 @@ export default {
         throw error;
       }
     },
-
     updateMindMap(nodeData, filename) {
       this.resultMessage = `<p class="success">檔案 <strong>${filename}</strong> 上傳成功！</p>`;
 
       this.mind.init({
         nodeData,
         linkData: {},
-        direction: 1,
+        direction: 2, // 使用2代表SIDE方向，確保與初始化一致
         template: "default",
       });
     },
@@ -377,6 +434,18 @@ export default {
   margin-bottom: 5px;
   font-weight: 500;
   color: #4b5563;
+}
+
+.pdf-upload-section {
+  background-color: #fff3e0; /* 淺橘色背景 */
+  border: 1px solid #ffe0b2;
+  transition: all 0.3s ease;
+}
+
+.export-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .success {

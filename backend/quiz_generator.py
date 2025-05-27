@@ -6,11 +6,12 @@ import os
 import json
 
 # 配置Gemini API
-GOOGLE_API_KEY = "AIzaSyCVRn89Q4lURX5-Sy_Sdw-Ncv6zNEqbtEc"  # 请替换为你的实际API key
+# GOOGLE_API_KEY = "AIzaSyCVRn89Q4lURX5-Sy_Sdw-Ncv6zNEqbtEc"  # 请替换为你的实际API key
+GOOGLE_API_KEY = "AIzaSyDFKmb0HkhsGedPENUJ8qAOJLabtftMtvw"
 genai.configure(api_key=GOOGLE_API_KEY)
 
 # 使用正確的模型名稱
-model = genai.GenerativeModel("gemini-1.5-pro")
+model = genai.GenerativeModel("gemini-1.5-flash-latest")
 
 quiz_bp = Blueprint('quiz', __name__)
 
