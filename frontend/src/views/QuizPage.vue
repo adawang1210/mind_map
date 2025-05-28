@@ -3,22 +3,33 @@
   <div class="quiz-page">
     <Header />
     <!-- 載入中畫面 - 當從心智圖頁面跳轉且正在等待題目生成時顯示 -->
-    <div v-if="isLoading" class="loading-container mx-auto my-10 text-center">
-      <v-card class="pa-6 elevation-3 mx-auto loading-card" max-width="80%">
-        <v-card-title class="text-h4 mb-4">題目生成中</v-card-title>
+    <div
+      v-if="isLoading"
+      class="loading-container mx-auto my-5 my-md-10 text-center"
+    >
+      <v-card
+        class="pa-4 pa-md-6 elevation-3 mx-auto loading-card"
+        max-width="95%"
+        style="max-width: 500px; width: 100%"
+      >
+        <v-card-title class="text-h5 text-md-h4 mb-2 mb-md-4"
+          >題目生成中</v-card-title
+        >
         <v-card-text class="text-center">
           <v-progress-circular
-            :size="70"
-            :width="7"
+            :size="60"
+            :width="6"
             color="primary"
             indeterminate
             class="loading-spinner"
           ></v-progress-circular>
-          <p class="text-subtitle-1 mt-6">正在為您生成測驗題目，請稍候...</p>
+          <p class="text-subtitle-2 text-md-subtitle-1 mt-4 mt-md-6">
+            正在為您生成測驗題目，請稍候...
+          </p>
           <p class="text-body-2 text-grey mt-2">
             根據文件大小和複雜度，這可能需要幾秒鐘的時間。
           </p>
-          <div class="loading-tips mt-8 pa-4">
+          <div class="loading-tips mt-4 mt-md-8 pa-3 pa-md-4">
             <p class="text-caption font-italic">
               提示：測驗完成後，您可以看到您的答題得分率，幫助您評估對內容的理解程度。
             </p>
@@ -26,23 +37,33 @@
         </v-card-text>
       </v-card>
     </div>
-
     <!-- 歡迎信息 - 当没有问题数据且不在加載狀態時顯示 -->
     <div
       v-if="questions.length === 0 && !isLoading"
-      class="no-data-container mx-auto my-10 text-center"
+      class="no-data-container mx-auto my-5 my-md-10 text-center"
     >
-      <v-card class="pa-6 elevation-3 mx-auto" max-width="80%">
-        <v-card-title class="text-h4 mb-4">歡迎來到測驗頁面</v-card-title>
+      <v-card
+        class="pa-4 pa-md-6 elevation-3 mx-auto"
+        max-width="95%"
+        style="max-width: 500px; width: 100%"
+      >
+        <v-card-title class="text-h5 text-md-h4 mb-2 mb-md-4"
+          >歡迎來到測驗頁面</v-card-title
+        >
         <v-card-text>
-          <p class="text-subtitle-1 mb-6">
+          <p class="text-subtitle-2 text-md-subtitle-1 mb-3 mb-md-6">
             您似乎是直接訪問此頁面，而沒有從心智圖頁面跳轉過來。
           </p>
-          <p class="mb-8">
+          <p class="mb-4 mb-md-8">
             為了獲得測驗題目，請先前往心智圖頁面上傳 PDF 文件並生成心智圖，
             然後點擊「生成測驗」按鈕來創建針對該內容的測驗問題。
           </p>
-          <v-btn color="primary" size="large" href="/mindmap" class="mt-4">
+          <v-btn
+            color="primary"
+            size="large"
+            href="/mindmap"
+            class="mt-2 mt-md-4"
+          >
             前往心智圖頁面
           </v-btn>
         </v-card-text>
@@ -50,19 +71,24 @@
     </div>
     <!-- 测验内容 - 当有问题数据且有当前问题且不在加載狀態時顯示 -->
     <div
-      class="container mx-auto px-0 pt-2 max-w-full"
+      class="quiz-container mx-auto px-2 px-md-3 pt-2 overflow-hidden"
       v-if="questions.length > 0 && currentQuestion && !isLoading"
     >
       <!-- 標題 -->
-      <div class="text-center mb-4 mt-6">
-        <h2 class="text-4xl font-bold text-primary mb-2">小測驗</h2>
+      <div class="text-center mb-3 mb-md-4 mt-4 mt-md-6">
+        <h2 class="text-h4 text-md-h3 font-bold text-primary mb-2">小測驗</h2>
       </div>
       <!-- 題目卡片 -->
-      <v-card class="pa-6 elevation-3 mx-auto question-card" max-width="80%">
+      <v-card
+        class="pa-3 pa-sm-4 pa-md-6 elevation-3 mx-auto question-card"
+        max-width="95%"
+      >
         <v-card-text>
           <div v-if="!quizFinished">
             <!-- 顯示目前題目 -->
-            <h3 class="text-h6 font-weight-bold mb-6">
+            <h3
+              class="text-subtitle-1 text-md-h6 font-weight-bold mb-3 mb-md-6"
+            >
               {{ currentQuestionIndex + 1 }}. {{ currentQuestion.question }}
             </h3>
 
@@ -196,9 +222,8 @@
                 >
               </v-btn>
             </div>
-
             <!-- 答題結果顯示 -->
-            <div v-if="showResult" class="text-center mt-6">
+            <div v-if="showResult" class="text-center mt-4 mt-md-6">
               <p
                 v-if="selectedAnswer === currentQuestion.correct"
                 class="text-success font-weight-medium"
@@ -206,53 +231,70 @@
                 回答正確！
               </p>
               <p v-else class="text-error font-weight-medium">回答錯誤！</p>
-              <v-btn class="mt-4" color="primary" @click="nextQuestion"
+              <v-btn class="mt-3 mt-md-4" color="primary" @click="nextQuestion"
                 >下一題</v-btn
               >
             </div>
           </div>
           <!-- 測驗完成畫面 -->
           <div v-else class="text-center">
-            <h3 class="text-h5 font-weight-bold mb-4">🎉 測驗完成</h3>
-            <p class="text-subtitle-1 mb-2">
+            <h3 class="text-h6 text-md-h5 font-weight-bold mb-3 mb-md-4">
+              🎉 測驗完成
+            </h3>
+            <p class="text-subtitle-2 text-md-subtitle-1 mb-2">
               你答對了 {{ correctCount }} / {{ questions.length }} 題
             </p>
             <p class="text-grey">
               得分率：{{ Math.round((correctCount / questions.length) * 100) }}%
             </p>
-            <div class="d-flex justify-center mt-6 button-container">
-              <v-btn color="indigo" class="mx-4" @click="restartQuiz"
+            <div
+              class="d-flex flex-column flex-sm-row justify-center mt-4 mt-md-6 button-container"
+            >
+              <v-btn
+                color="indigo"
+                class="mb-3 mb-sm-0 mx-sm-3"
+                @click="restartQuiz"
                 >重新開始</v-btn
               >
-              <v-btn color="success" class="mx-4" @click="regenerateQuiz"
+              <v-btn color="success" class="mx-sm-3" @click="regenerateQuiz"
                 >重新生成新題目</v-btn
               >
             </div>
           </div>
         </v-card-text>
       </v-card>
-
       <!-- 下方進度條 -->
-      <v-card class="mt-6 px-0 py-2" color="grey-lighten-3" flat tile>
-        <v-card-text class="px-0">
+      <v-card
+        class="mt-4 mt-md-6 py-2 progress-card"
+        color="grey-lighten-3"
+        flat
+        tile
+      >
+        <v-card-text class="px-1 px-sm-2">
           <div class="text-center text-sm font-bold mb-2">
             {{ answeredCount }} / {{ questions.length }}
           </div>
-          <div class="d-flex align-center justify-space-between px-4">
-            <span class="text-error font-weight-medium"
-              >錯誤：{{ incorrectCount }}</span
+          <div
+            class="d-flex flex-column flex-sm-row align-center justify-space-between px-2 px-md-4 progress-container"
+          >
+            <span
+              class="text-error font-weight-medium mb-2 mb-sm-0 progress-text"
             >
+              錯誤：{{ incorrectCount }}
+            </span>
             <v-progress-linear
               :key="progressPercentage"
               :model-value="progressPercentage"
               color="blue"
               height="10"
               rounded
-              style="width: 75%"
+              class="progress-bar mx-auto mx-sm-0"
             ></v-progress-linear>
-            <span class="text-success font-weight-medium"
-              >正確：{{ correctCount }}</span
+            <span
+              class="text-success font-weight-medium mt-2 mt-sm-0 progress-text"
             >
+              正確：{{ correctCount }}
+            </span>
           </div>
         </v-card-text>
       </v-card>
@@ -432,12 +474,24 @@ onMounted(() => {
 /* 可加上背景樣式 */
 body {
   background-color: #f5f7fa;
+  overflow-x: hidden; /* 防止水平捲動 */
+  width: 100%;
+  max-width: 100vw;
 }
 
 .quiz-page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden; /* 防止水平捲動 */
+}
+
+.quiz-container {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden; /* 防止水平捲動 */
 }
 
 .no-data-container,
@@ -464,16 +518,27 @@ body {
 
 /* 新增：統一選項按鈕樣式 */
 .v-btn.option-btn {
-  min-height: 60px !important; /* 強制使用固定高度 */
-  height: 60px !important;
+  min-height: 50px !important; /* 較小設備的高度 */
+  height: auto !important; /* 允許自適應高度 */
   width: 100%;
+  max-width: 100%;
   white-space: normal;
   text-align: left;
   justify-content: flex-start;
   align-items: center;
-  padding: 12px 16px;
+  padding: 8px 12px;
   overflow: hidden;
   position: relative; /* 為絕對定位的圖標提供參考 */
+  overflow-wrap: break-word;
+  word-break: break-word;
+  box-sizing: border-box;
+}
+
+@media (min-width: 600px) {
+  .v-btn.option-btn {
+    min-height: 60px !important; /* 大屏幕使用更高的高度 */
+    padding: 12px 16px;
+  }
 }
 
 /* 確保文本在按鈕內部正確換行 */
@@ -483,25 +548,51 @@ body {
   overflow-wrap: break-word;
   word-break: break-word;
   line-height: 1.4;
+  font-size: 0.9rem;
+  max-width: 100%;
+}
+
+@media (min-width: 600px) {
+  .option-text {
+    font-size: 1rem;
+  }
 }
 
 /* 圖標靠右對齊 */
 .result-icon {
   position: absolute;
-  right: 16px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
 }
 
-/* 題目卡片固定高度與寬度 */
+/* 題目卡片高度與寬度 */
 .question-card {
-  min-height: 400px; /* 固定最小高度 */
+  min-height: 300px; /* 小設備較小高度 */
   height: auto; /* 允許自動擴展 */
-  width: 800px !important; /* 固定寬度 */
-  max-width: 90% !important; /* 在小螢幕上的最大寬度 */
+  width: 100% !important;
+  max-width: 100% !important;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden; /* 防止水平捲動 */
+  box-sizing: border-box;
+}
+
+@media (min-width: 600px) {
+  .question-card {
+    min-height: 350px;
+    width: 100% !important;
+    max-width: 600px !important;
+  }
+}
+
+@media (min-width: 960px) {
+  .question-card {
+    min-height: 400px;
+    width: 100% !important;
+    max-width: 800px !important;
+  }
 }
 
 /* 確保卡片內容能夠填充高度 */
@@ -513,8 +604,14 @@ body {
 
 /* 載入中畫面的樣式 */
 .loading-card {
-  min-height: 350px;
+  min-height: 280px;
   transition: all 0.5s ease;
+}
+
+@media (min-width: 600px) {
+  .loading-card {
+    min-height: 350px;
+  }
 }
 
 .loading-spinner {
@@ -526,20 +623,76 @@ body {
   transition: all 0.3s ease;
 }
 
-.v-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+/* 只在非觸控設備上顯示懸停效果 */
+@media (hover: hover) {
+  .v-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
 }
 
 /* 按鈕容器樣式 */
 .button-container {
-  gap: 24px; /* 增加按鈕之間的間距 */
+  gap: 16px;
+}
+
+@media (min-width: 600px) {
+  .button-container {
+    gap: 24px; /* 大屏幕上增加按鈕之間的間距 */
+  }
 }
 
 .loading-tips {
   background-color: rgba(0, 0, 0, 0.03);
   border-radius: 8px;
   border-left: 3px solid var(--v-primary-base);
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* 進度條樣式 */
+.progress-bar {
+  width: 100%;
+  margin: 10px 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.progress-card {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.progress-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.progress-text {
+  flex-shrink: 0;
+}
+
+/* 對所有容器增加通用防止溢出規則 */
+[class*="container"],
+[class*="card"],
+.v-card,
+.v-card-text {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+@media (min-width: 600px) {
+  .progress-bar {
+    width: 60%;
+    max-width: 60%;
+    margin: 0;
+  }
 }
 
 @keyframes pulse {
