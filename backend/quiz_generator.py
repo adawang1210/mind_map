@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from pdf_processor import analyze_french_history, prompt
 import random
 import google.generativeai as genai
@@ -89,11 +89,39 @@ def generate_questions_from_content(content):
             }
         ]
 
-@quiz_bp.route('/api/quiz/questions', methods=['GET'])
+@quiz_bp.route('/api/quiz/questions', methods=['POST', 'GET'])
 def get_quiz_questions():
     try:
-        # 获取最新的PDF分析内容
-        content, prompt_token, output_token = analyze_french_history([], prompt)
+        content = ""
+        prompt_token = 0
+        output_token = 0
+        
+        # 檢查是否為POST請求並包含數據
+        if request.method == 'POST':
+            data = request.json
+            filename = data.get('filename', '')
+            mind_map_data = data.get('mindMapData', {})
+            
+            print(f"接收到的檔案名稱: {filename}")
+            print(f"接收到的心智圖數據: {mind_map_data}")
+            
+            # 如果有心智圖數據，使用它來生成問題
+            if mind_map_data:
+                # 將心智圖數據轉換為文本形式以供生成問題使用
+                content = json.dumps(mind_map_data, ensure_ascii=False)
+            else:
+                # 如果沒有心智圖數據，但有文件名，嘗試找到並使用該文件
+                if filename:
+                    pdf_path = os.path.join('uploads', filename)
+                    if os.path.exists(pdf_path):
+                        content, prompt_token, output_token = analyze_french_history([pdf_path], prompt)
+                    else:
+                        print(f"找不到檔案: {pdf_path}")
+                        content, prompt_token, output_token = analyze_french_history([], prompt)
+                else:
+                    content, prompt_token, output_token = analyze_french_history([], prompt)
+        else:  # GET請求 (向下兼容)
+            content, prompt_token, output_token = analyze_french_history([], prompt)
         
         # 生成问题
         questions = generate_questions_from_content(content)
@@ -110,7 +138,8 @@ def get_quiz_questions():
             }
         })
     except Exception as e:
+        print(f"生成測驗問題失敗: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e)
-        }), 500 
+        }), 500

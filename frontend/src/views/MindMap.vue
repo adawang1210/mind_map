@@ -68,7 +68,7 @@
             >
             <v-btn color="warning" @click="exportJson">匯出 JSON 結構</v-btn>
             <v-spacer></v-spacer>
-            <v-btn color="primary" @click="exportJson">儲存後生成測驗</v-btn>
+            <v-btn color="primary" @click="generateQuiz">儲存後生成測驗</v-btn>
           </div>
         </section>
       </v-col>
@@ -341,6 +341,28 @@ export default {
       a.download = "mindmap.json";
       a.click();
       URL.revokeObjectURL(url);
+    },
+    generateQuiz() {
+      try {
+        // 獲取當前的心智圖數據
+        const data = this.mind.getData();
+
+        if (!data || !this.fileName) {
+          alert("請先上傳並生成心智圖，再產生測驗");
+          return;
+        }
+
+        // 將 JSON 轉換為字符串並進行 URL 編碼
+        const jsonDataStr = encodeURIComponent(JSON.stringify(data));
+
+        // 導航到測驗頁面，將檔案名稱和 JSON 數據作為參數傳遞
+        window.location.href = `/quizpage?filename=${encodeURIComponent(
+          this.fileName
+        )}&data=${jsonDataStr}`;
+      } catch (error) {
+        console.error("產生測驗時發生錯誤:", error);
+        alert("產生測驗失敗，請稍後重試");
+      }
     },
     parseJsonFromResponse(responseText) {
       let raw = responseText;
