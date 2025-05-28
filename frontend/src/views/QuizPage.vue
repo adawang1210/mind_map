@@ -39,7 +39,7 @@
             您似乎是直接訪問此頁面，而沒有從心智圖頁面跳轉過來。
           </p>
           <p class="mb-8">
-            為了獲得測驗題目，請先前往心智圖頁面上傳PDF文件並生成心智圖，
+            為了獲得測驗題目，請先前往心智圖頁面上傳 PDF 文件並生成心智圖，
             然後點擊「生成測驗」按鈕來創建針對該內容的測驗問題。
           </p>
           <v-btn color="primary" size="large" href="/mindmap" class="mt-4">
@@ -219,8 +219,11 @@
             </p>
             <p class="text-grey">
               得分率：{{ Math.round((correctCount / questions.length) * 100) }}%
-            </p>            <div class="d-flex justify-center mt-6 button-container">
-              <v-btn color="indigo" class="mx-4" @click="restartQuiz">重新開始</v-btn>
+            </p>
+            <div class="d-flex justify-center mt-6 button-container">
+              <v-btn color="indigo" class="mx-4" @click="restartQuiz"
+                >重新開始</v-btn
+              >
               <v-btn color="success" class="mx-4" @click="regenerateQuiz"
                 >重新生成新題目</v-btn
               >

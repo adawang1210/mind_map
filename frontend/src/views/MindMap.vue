@@ -1,98 +1,145 @@
 <template>
-  <Header />
-  <v-container class="pa-4" style="max-width: 1800px; margin: auto">
-    <!-- PDF 上傳區塊 -->
-    <v-row>
-      <v-col cols="12">
-        <section class="pdf-upload-section pa-12 rounded-lg elevation-1">
-          <h2 class="mb-4 text-h4">上傳 PDF 檔案</h2>
-          <div class="upload-guide mb-4">
-            <p>
-              法文史料上傳，系統的雙層AI (Gemini 1.5 Pro核心)
-              即時生成互動心智圖。複雜歷史視覺化，助您高效理解、輕鬆記憶！
-            </p>
-          </div>
-          <form @submit.prevent="uploadFile">
-            <input
-              type="file"
-              id="pdfFile"
-              accept=".pdf"
-              ref="fileInput"
-              required
-              @change="handleFileChange"
-              style="display: none"
-            />
-            <v-btn color="primary" @click="$refs.fileInput.click()">
-              {{ fileName || "點擊選擇檔案" }}
-            </v-btn>
-            <v-btn
-              type="submit"
-              color="success"
-              class="ml-3"
-              :disabled="processing"
-              >上傳</v-btn
-            >
-          </form>
-          <div v-if="processing" class="mt-4">
-            <div class="process-status">
-              <div class="process-text">{{ processStage }}</div>
-              <v-progress-linear
-                color="primary"
-                height="20"
-                :value="progress"
-                striped
-                buffer-value="0"
-              >
-                <template v-slot:default> {{ Math.ceil(progress) }}% </template>
-              </v-progress-linear>
+  <div class="mind-map-app">
+    <Header />
+    <v-container
+      class="pa-4 pa-sm-2"
+      fluid
+      style="max-width: 1800px; margin: auto"
+    >
+      <!-- PDF 上傳區塊 -->
+      <v-row>
+        <v-col cols="12">
+          <section
+            class="pdf-upload-section pa-md-12 pa-6 rounded-lg elevation-1"
+          >
+            <h2 class="mb-4 text-h4 text-md-h4 text-sm-h5 text-xs-h6">
+              上傳 PDF 檔案
+            </h2>
+            <div class="upload-guide mb-4">
+              <p>
+                法文史料上傳，系統的雙層AI (Gemini 1.5 Pro核心)
+                即時生成互動心智圖。複雜歷史視覺化，助您高效理解、輕鬆記憶！
+              </p>
             </div>
-          </div>
-          <div v-html="resultMessage" class="mt-4"></div>
-        </section>
-      </v-col>
-    </v-row>
+            <form @submit.prevent="uploadFile" class="upload-form">
+              <input
+                type="file"
+                id="pdfFile"
+                accept=".pdf"
+                ref="fileInput"
+                required
+                @change="handleFileChange"
+                style="display: none"
+              />
+              <div class="button-container">
+                <v-btn
+                  color="primary"
+                  @click="$refs.fileInput.click()"
+                  class="upload-btn"
+                >
+                  {{ fileName || "點擊選擇檔案" }}
+                </v-btn>
+                <v-btn
+                  type="submit"
+                  color="success"
+                  class="ml-md-3 mt-2 mt-md-0 upload-btn"
+                  :disabled="processing"
+                  >上傳</v-btn
+                >
+              </div>
+            </form>
+            <div v-if="processing" class="mt-4">
+              <div class="process-status">
+                <div class="process-text">{{ processStage }}</div>
+                <v-progress-linear
+                  color="primary"
+                  height="20"
+                  :value="progress"
+                  striped
+                  buffer-value="0"
+                >
+                  <template v-slot:default>
+                    {{ Math.ceil(progress) }}%
+                  </template>
+                </v-progress-linear>
+              </div>
+            </div>
+            <div v-html="resultMessage" class="mt-4"></div>
+          </section>
+        </v-col>
+      </v-row>
+      <!-- 心智圖與快捷鍵並排 -->
+      <v-row class="mt-8 mind-map-row" dense>
+        <!-- 左側心智圖 -->
+        <v-col cols="12" md="9" sm="12" class="px-md-4 px-2 d-flex flex-column">
+          <section
+            class="mindmap-section pa-md-4 pa-2 elevation-2 rounded flex-grow-1"
+          >
+            <h2 class="mb-3">我的心智圖</h2>
+            <div id="map" ref="map" class="mind-map-container"></div>
+            <div class="export-buttons mt-4">
+              <v-btn
+                color="success"
+                class="me-2 mb-2 mb-md-0 export-btn"
+                @click="exportPng"
+                ><span class="d-none d-sm-block">匯出 PNG 檔案</span
+                ><span class="d-block d-sm-none">PNG</span></v-btn
+              >
+              <v-btn
+                color="info"
+                class="me-2 mb-2 mb-md-0 export-btn"
+                @click="exportSvg"
+                ><span class="d-none d-sm-block">匯出 SVG 向量圖</span
+                ><span class="d-block d-sm-none">SVG</span></v-btn
+              >
+              <v-btn
+                color="warning"
+                class="me-2 mb-2 mb-md-0 export-btn"
+                @click="exportJson"
+                ><span class="d-none d-sm-block">匯出 JSON 結構</span
+                ><span class="d-block d-sm-none">JSON</span></v-btn
+              >
+              <v-spacer class="d-none d-md-block"></v-spacer>
+              <v-btn
+                color="primary"
+                class="export-btn quiz-btn"
+                @click="generateQuiz"
+              >
+                <span class="d-none d-sm-block">儲存後生成測驗</span>
+                <span class="d-block d-sm-none">生成測驗</span>
+              </v-btn>
+            </div>
+          </section>
+        </v-col>
 
-    <!-- 心智圖與快捷鍵並排 -->
-    <v-row class="mt-8" dense>
-      <!-- 左側心智圖 -->
-      <v-col cols="12" md="9" class="px-4">
-        <section class="mindmap-section pa-4 elevation-2 rounded">
-          <h2 class="mb-3">我的心智圖</h2>
-          <div id="map" ref="map" class="mind-map-container"></div>
-          <div class="export-buttons mt-4">
-            <v-btn color="success" class="me-2" @click="exportPng"
-              >匯出 PNG 檔案</v-btn
-            >
-            <v-btn color="info" class="me-2" @click="exportSvg"
-              >匯出 SVG 向量圖</v-btn
-            >
-            <v-btn color="warning" @click="exportJson">匯出 JSON 結構</v-btn>
-            <v-spacer></v-spacer>
-            <v-btn color="primary" @click="generateQuiz">儲存後生成測驗</v-btn>
-          </div>
-        </section>
-      </v-col>
+        <!-- 右側快捷鍵 -->
+        <v-col
+          cols="12"
+          md="3"
+          sm="12"
+          class="px-md-4 px-2 mt-4 mt-md-0 d-flex flex-column"
+        >
+          <section
+            class="shortcut-section pa-md-4 pa-3 elevation-2 rounded flex-grow-1"
+          >
+            <h2 class="mb-3">快捷鍵說明</h2>
+            <div class="shortcut-scroll">
+              <table class="shortcut-table">
+                <tbody>
+                  <tr v-for="(item, index) in shortcuts" :key="index">
+                    <td class="shortcut-key">{{ item.key }}</td>
+                    <td class="shortcut-func">{{ item.function }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </v-col>
+      </v-row>
+    </v-container>
 
-      <!-- 右側快捷鍵 -->
-      <v-col cols="12" md="3" class="px-4">
-        <section class="shortcut-section pa-4 elevation-2 rounded">
-          <h2 class="mb-3">快捷鍵說明</h2>
-          <div class="shortcut-scroll">
-            <table class="shortcut-table">
-              <tbody>
-                <tr v-for="(item, index) in shortcuts" :key="index">
-                  <td class="shortcut-key">{{ item.key }}</td>
-                  <td class="shortcut-func">{{ item.function }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </v-col>
-    </v-row>
-  </v-container>
-
-  <Footer />
+    <Footer />
+  </div>
 </template>
 
 <script>
@@ -401,33 +448,103 @@ export default {
 </script>
 
 <style scoped>
+.mind-map-app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.mind-map-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 960px) {
+  .mind-map-row {
+    min-height: 600px;
+  }
+}
+
 .mindmap-section,
 .shortcut-section {
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background-color: #fff;
 }
 
+@media (max-width: 600px) {
+  .mindmap-section {
+    min-height: auto;
+  }
+}
+
 .mind-map-container {
   flex-grow: 1;
-  aspect-ratio: 3/2; /* 使心智圖呈現正方形 */
-  margin: 0 auto; /* 水平居中 */
+  aspect-ratio: 3/2;
+  margin: 0 auto;
   border: 1px solid #ddd;
-  max-width: 100%; /* 增加寬度至100% */
-  overflow: auto; /* 添加滾動條 */
-  min-height: 0; /* 修復Flex容器中滾動問題 */
+  max-width: 100%;
+  overflow: auto;
+  min-height: 400px;
+  touch-action: manipulation;
+  -webkit-overflow-scrolling: touch; /* 增加iOS平台的滑動流暢度 */
+}
+
+@media (min-width: 1200px) {
+  .mind-map-container {
+    min-height: 500px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mind-map-container {
+    min-height: 300px;
+    aspect-ratio: auto;
+    max-height: 60vh; /* 限制在手機上的高度 */
+  }
+}
+
+@media (max-width: 600px) {
+  .mind-map-container {
+    min-height: 200px;
+    max-height: 50vh; /* 在小手機上進一步降低高度 */
+  }
 }
 
 .shortcut-section {
-  max-height: 100vh;
-  overflow-y: auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   background-color: #fff;
   font-size: 14px;
+  overflow-y: auto;
+}
+
+@media (min-width: 960px) {
+  .shortcut-section {
+    height: 100%;
+    min-height: 500px;
+  }
+}
+
+@media (max-width: 768px) {
+  .shortcut-section {
+    max-height: none;
+    min-height: auto;
+    overflow-y: hidden;
+  }
 }
 
 .shortcut-scroll {
   overflow-x: hidden;
+  flex-grow: 1;
+}
+
+@media (max-width: 768px) {
+  .shortcut-scroll {
+    overflow-y: hidden;
+  }
 }
 
 .shortcut-table {
@@ -464,10 +581,45 @@ export default {
   transition: all 0.3s ease;
 }
 
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.button-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.upload-btn {
+  min-width: 120px;
+}
+
+@media (max-width: 600px) {
+  .upload-btn {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+}
+
 .export-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.export-btn {
+  min-width: 80px;
+}
+
+@media (max-width: 768px) {
+  .quiz-btn {
+    margin-top: 8px;
+    width: 100%;
+  }
 }
 
 .success {
