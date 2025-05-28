@@ -4,14 +4,66 @@ import random
 import google.generativeai as genai
 import os
 import json
+from dotenv import load_dotenv
 
-# 配置Gemini API
-# GOOGLE_API_KEY = "AIzaSyCVRn89Q4lURX5-Sy_Sdw-Ncv6zNEqbtEc"  # 请替换为你的实际API key
-GOOGLE_API_KEY = "AIzaSyDFKmb0HkhsGedPENUJ8qAOJLabtftMtvw"
-genai.configure(api_key=GOOGLE_API_KEY)
+# 載入環境變數
+load_dotenv()
+
+# API 金鑰列表，預設為空，將從環境變數載入
+API_KEYS = [
+    os.getenv('GEMINI_API_KEY_1', ''),  # 主要金鑰
+    os.getenv('GEMINI_API_KEY_2', ''),  # 備用金鑰1
+    os.getenv('GEMINI_API_KEY_3', '')   # 備用金鑰2
+]
+
+# 移除空值
+API_KEYS = [key for key in API_KEYS if key]
+
+# 如果沒有設置任何金鑰，添加警告訊息
+if not API_KEYS:
+    print("警告: 未設置任何 API 金鑰，請在 .env 文件中配置 GEMINI_API_KEY_1, GEMINI_API_KEY_2, GEMINI_API_KEY_3")
+    # 添加一個空的金鑰以防止程式崩潰，但這會導致 API 請求失敗
+    API_KEYS = ['']
+
+current_key_index = 0
+genai.configure(api_key=API_KEYS[current_key_index])
 
 # 使用正確的模型名稱
 model = genai.GenerativeModel("gemini-1.5-flash-latest")
+
+def rotate_api_key():
+    """
+    輪換到下一個可用的 API 金鑰。
+    返回：bool 是否成功切換到新金鑰
+    """
+    global current_key_index, model
+    
+    # 記錄原始索引，用於判斷是否已嘗試所有金鑰
+    original_index = current_key_index
+    
+    while True:
+        # 切換到下一個金鑰
+        current_key_index = (current_key_index + 1) % len(API_KEYS)
+        
+        # 如果已經嘗試了所有金鑰，則返回失敗
+        if current_key_index == original_index:
+            print("所有 API 金鑰都已嘗試且皆無法使用")
+            return False
+            
+        try:
+            print(f"切換到 API 金鑰 {current_key_index + 1}/{len(API_KEYS)}")
+            genai.configure(api_key=API_KEYS[current_key_index])
+            model = genai.GenerativeModel("gemini-1.5-flash-latest")
+            
+            # 測試新金鑰是否有效（使用簡單查詢）
+            test_response = model.generate_content("Say hello")
+            test_response.text  # 確認能獲取響應
+            return True
+            
+        except Exception as e:
+            print(f"API 金鑰 {current_key_index + 1} 無效或已達到配額限制: {str(e)}")
+            # 繼續嘗試下一個金鑰
+            continue
 
 quiz_bp = Blueprint('quiz', __name__)
 
@@ -43,51 +95,68 @@ def generate_questions_from_content(content):
     6. Return ONLY the JSON array, no other text
     """
     
-    try:
-        # 使用Gemini生成问题
-        response = model.generate_content([prompt, content])
-        
-        # 清理回應文本，只保留 JSON 部分
-        response_text = response.text.strip()
-        if response_text.startswith('```json'):
-            response_text = response_text[7:]
-        if response_text.endswith('```'):
-            response_text = response_text[:-3]
-        response_text = response_text.strip()
-        
-        # 使用 json.loads 解析 JSON
-        questions = json.loads(response_text)
-        
-        # 验证问题格式
-        for q in questions:
-            if q['type'] not in ['single', 'true-false']:
-                raise ValueError(f"Invalid question type: {q['type']}")
-            if q['type'] == 'single':
-                if len(q['options']) != 4:
-                    raise ValueError("Single choice questions must have 4 options")
-                if not isinstance(q['correct'], int) or q['correct'] not in range(4):
-                    raise ValueError("Single choice correct answer must be an integer between 0-3")
-            elif q['type'] == 'true-false':
-                if not isinstance(q['correct'], bool):
-                    raise ValueError("True/False correct answer must be a boolean")
-        
-        return questions
-    except Exception as e:
-        print(f"Error generating questions: {str(e)}")
-        # 如果生成失败，返回一些默认问题
-        return [
-            {
-                "type": "single",
-                "question": "What was the iconic event that marked the beginning of the French Revolution?",
-                "options": ["Storming of the Bastille", "Execution of Louis XVI", "Napoleon's Coup", "Meeting of the Estates General"],
-                "correct": 0
-            },
-            {
-                "type": "true-false",
-                "question": "The French Revolution occurred in the late 18th century?",
-                "correct": True
-            }
-        ]
+    # 最多嘗試所有 API 金鑰
+    max_retries = len(API_KEYS)
+    retry_count = 0
+    
+    while retry_count < max_retries:
+        try:
+            # 使用Gemini生成问题
+            response = model.generate_content([prompt, content])
+            
+            # 清理回應文本，只保留 JSON 部分
+            response_text = response.text.strip()
+            if response_text.startswith('```json'):
+                response_text = response_text[7:]
+            if response_text.endswith('```'):
+                response_text = response_text[:-3]
+            response_text = response_text.strip()
+            
+            # 使用 json.loads 解析 JSON
+            questions = json.loads(response_text)
+            
+            # 验证问题格式
+            for q in questions:
+                if q['type'] not in ['single', 'true-false']:
+                    raise ValueError(f"Invalid question type: {q['type']}")
+                if q['type'] == 'single':
+                    if len(q['options']) != 4:
+                        raise ValueError("Single choice questions must have 4 options")
+                    if not isinstance(q['correct'], int) or q['correct'] not in range(4):
+                        raise ValueError("Single choice correct answer must be an integer between 0-3")
+                elif q['type'] == 'true-false':
+                    if not isinstance(q['correct'], bool):
+                        raise ValueError("True/False correct answer must be a boolean")
+            
+            # 成功生成問題
+            return questions
+            
+        except Exception as e:
+            print(f"使用 API 金鑰 {current_key_index + 1} 生成問題時出錯: {str(e)}")
+            # 嘗試輪換 API 金鑰
+            if rotate_api_key():
+                print("已切換到新的 API 金鑰，重新嘗試生成問題...")
+                retry_count += 1
+                continue
+            else:
+                # 所有金鑰都已嘗試過且失敗
+                break
+    
+    # 所有金鑰嘗試後仍失敗，返回默認問題
+    print("所有 API 金鑰在生成測驗問題時均失敗，使用默認問題")
+    return [
+        {
+            "type": "single",
+            "question": "What was the iconic event that marked the beginning of the French Revolution?",
+            "options": ["Storming of the Bastille", "Execution of Louis XVI", "Napoleon's Coup", "Meeting of the Estates General"],
+            "correct": 0
+        },
+        {
+            "type": "true-false",
+            "question": "The French Revolution occurred in the late 18th century?",
+            "correct": True
+        }
+    ]
 
 @quiz_bp.route('/api/quiz/questions', methods=['POST', 'GET'])
 def get_quiz_questions():
