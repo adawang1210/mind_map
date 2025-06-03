@@ -99,7 +99,7 @@ def analyze():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-port = int(os.environ.get("PORT", 4000))
+port = int(os.environ.get("PORT", 5001))
 
 @app.route('/test')
 def test():
