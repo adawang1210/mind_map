@@ -1,11 +1,12 @@
 # app.py
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 from pdf_processor import analyze_french_history, prompt
 from quiz_generator import quiz_bp
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="../frontend/dist", static_url_path="/")
+
 # 配置 CORS
 CORS(app, 
      resources={
@@ -30,7 +31,7 @@ app.register_blueprint(quiz_bp)
 
 @app.route('/')
 def index():
-    return "I am backend i am running"
+    return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
