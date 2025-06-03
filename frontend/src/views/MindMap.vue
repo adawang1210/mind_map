@@ -162,7 +162,7 @@ export default {
       // backendUrl: "http://127.0.0.1:5001",
       backendUrl:
         process.env.NODE_ENV === "production"
-          ? "https://your-app.onrender.com"
+          ? "https://mind-map-3ckr.onrender.com"
           : "http://127.0.0.1:5001",
       processing: false,
       progress: 0,
