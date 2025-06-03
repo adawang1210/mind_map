@@ -5,7 +5,7 @@ import os
 from pdf_processor import analyze_french_history, prompt
 from quiz_generator import quiz_bp
 
-app = Flask(__name__, static_folder="../frontend/dist", static_url_path="/")
+app = Flask(__name__, static_folder="dist", static_url_path="/")
 
 # 配置 CORS
 CORS(app, 
@@ -99,6 +99,11 @@ def analyze():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 4000))
+port = int(os.environ.get("PORT", 4000))
+
+@app.route('/test')
+def test():
+    return "Server is alive!"
+
+if __name__ == '__main__':    
     app.run(host='0.0.0.0', port=port, debug=True)
