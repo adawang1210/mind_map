@@ -159,9 +159,8 @@ export default {
       mind: null,
       resultMessage: "",
       fileName: "",
-      // backendUrl: "http://127.0.0.1:5001",
-      backendUrl:
-        process.env.NODE_ENV === "production" ? "" : "http://127.0.0.1:5001",
+      // Use environment variable from .env files
+      backendUrl: process.env.VUE_APP_BACKEND_URL || "http://127.0.0.1:5001",
       processing: false,
       progress: 0,
       processStage: "",
